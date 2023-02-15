@@ -31,7 +31,7 @@ if args:
 		index = args.index("--dst") + 1
 		DST = args[index]
 
-print(f"Target: {DST}, Source Prefix: {PREFIX}, Port: {UDP_PORT}, MAX_Bandwidth: {MAX_BW}Mbps, Packet Size: {SIZE}Byte")
+print(f"Target: {DST}:{UDP_PORT}, Source Prefix: {PREFIX}, MAX_Bandwidth: {MAX_BW}Mbps, Packet Size: {SIZE}Byte")
 
 ip_list = []
 network = ipaddress.IPv4Network(PREFIX)
@@ -43,15 +43,17 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
 sock.setsockopt(socket.SOL_IP, socket.IP_HDRINCL, 1)
 
 start_time = time.time()
+checker = time.time()
 MAX_BW = MAX_BW * 1000 * 1000
 sent_bytes = 0
+sequence = 1
 padding = "X" * SIZE
 
 while True:
 	Src = random.choice(ip_list)
 
 	current_time = time.time()
-	data = {'data': padding, 'timestamp': current_time}
+	data = {'data': padding, 'timestamp': current_time, 'sequence': sequence}
 	payload = json.dumps(data).encode()
 
 	ip_header = b"\x45\x00\x00\x1d\x00\x00\x00\x00\x40\x11\x00\x00" + socket.inet_aton(Src) + socket.inet_aton(DST)
@@ -60,6 +62,13 @@ while True:
 	packet = ip_header + udp_header + payload
 
 	sock.sendto(packet, (DST, UDP_PORT))
+
+	if current_time - checker > 1:
+		checker = current_time
+		print(f"Packet Sent: {sequence}", end="\r")
+
+	sequence += 1
+
 	sent_bytes += len(packet) + 14
 	elapsed_time = time.time() - start_time
 	expected_time = sent_bytes * 8 / MAX_BW
