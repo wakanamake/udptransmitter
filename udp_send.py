@@ -1,7 +1,9 @@
+import socket
 import ipaddress
 import time
 import random
 import sys
+import json
 from struct import *
 
 SIZE = 700
@@ -11,6 +13,7 @@ UDP_PORT = 5999
 DST = "127.0.0.1"
 
 args = sys.argv[1:]
+
 if args:
 	if "--prefix" in args:
 		index = args.index("--prefix") + 1
@@ -29,9 +32,10 @@ if args:
 		DST = args[index]
 
 print(f"Target: {DST}, Source Prefix: {PREFIX}, Port: {UDP_PORT}, MAX_Bandwidth: {MAX_BW}Mbps, Packet Size: {SIZE}Byte")
-ip_list = []
 
+ip_list = []
 network = ipaddress.IPv4Network(PREFIX)
+
 for ip in network:
 	ip_list.append(str(ip))
 
@@ -41,13 +45,20 @@ sock.setsockopt(socket.SOL_IP, socket.IP_HDRINCL, 1)
 start_time = time.time()
 MAX_BW = MAX_BW * 1000 * 1000
 sent_bytes = 0
-payload = b"X" * SIZE
+padding = "X" * SIZE
 
 while True:
 	Src = random.choice(ip_list)
+
+	current_time = time.time()
+	data = {'data': padding, 'timestamp': current_time}
+	payload = json.dumps(data).encode()
+
 	ip_header = b"\x45\x00\x00\x1d\x00\x00\x00\x00\x40\x11\x00\x00" + socket.inet_aton(Src) + socket.inet_aton(DST)
+
 	udp_header = pack('!HHHH', UDP_PORT, UDP_PORT, 8+len(payload), 0)
 	packet = ip_header + udp_header + payload
+
 	sock.sendto(packet, (DST, UDP_PORT))
 	sent_bytes += len(packet) + 14
 	elapsed_time = time.time() - start_time
