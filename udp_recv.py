@@ -2,7 +2,14 @@ import socket
 import sys
 import json
 import time
-import statistics
+import signal
+
+def handle_sigterm(signal, frame):
+	print("\n")
+	sock.close()
+	sys.exit(0)
+
+signal.signal(signal.SIGINT, handle_sigterm)
 
 UDP_IP = "0.0.0.0"
 UDP_PORT = 5999
