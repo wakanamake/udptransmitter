@@ -36,8 +36,7 @@ while True:
 	avg_latency = statistics.mean(latencies)
 	max_latency = max(latencies)
 
-	print(f"Minimum latency: {min_latency:.6f}, Average latency: {avg_latency:.6f}, Maximum latency: {max_latency:.6f}", end="\r")
-
+	print(f"Minimum latency: {min_latency * 1000:.3f}ms, Average latency: {avg_latency * 1000:.3f}ms, Maximum latency: {max_latency * 1000:.3f}ms", end="\r")
 	#print("Rcv from {}:{}".format(addr, latency))
 
 sock.close()
