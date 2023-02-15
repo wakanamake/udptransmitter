@@ -4,7 +4,15 @@ import time
 import random
 import sys
 import json
+import signal
 from struct import *
+
+def handle_sigterm(signal, frame):
+	print("\n")
+	sock.close()
+	sys.exit(0)
+
+signal.signal(signal.SIGINT, handle_sigterm)
 
 SIZE = 700
 PREFIX = "172.12.0.0/24"
@@ -33,6 +41,7 @@ if args:
 
 print(f"Target: {DST}:{UDP_PORT}, Source Prefix: {PREFIX}, MAX_Bandwidth: {MAX_BW}Mbps, Packet Size: {SIZE}Byte")
 
+
 ip_list = []
 network = ipaddress.IPv4Network(PREFIX)
 
@@ -48,6 +57,7 @@ MAX_BW = MAX_BW * 1000 * 1000
 sent_bytes = 0
 sequence = 1
 padding = "X" * SIZE
+
 
 while True:
 	Src = random.choice(ip_list)
@@ -66,6 +76,7 @@ while True:
 	if current_time - checker > 1:
 		checker = current_time
 		print(f"Packet Sent: {sequence}", end="\r")
+	#print(sequence)
 
 	sequence += 1
 
@@ -73,5 +84,3 @@ while True:
 	elapsed_time = time.time() - start_time
 	expected_time = sent_bytes * 8 / MAX_BW
 	time.sleep(max(0, expected_time - elapsed_time))
-
-sock.close()
