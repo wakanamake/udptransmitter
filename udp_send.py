@@ -57,7 +57,7 @@ sock.setsockopt(socket.SOL_IP, socket.IP_HDRINCL, 1)
 checker = start_time = time.time()
 MAX_BW = MAX_BW * 1000 * 1000
 sent_bytes = 0
-sequence = 1
+sequence = 0
 padding = "X" * SIZE
 
 while True:
@@ -65,7 +65,6 @@ while True:
 
 	current_time = time.time()
 	data = {'data': padding, 'timestamp': current_time, 'sequence': sequence}
-	#data = {'timestamp': current_time, 'sequence': sequence}
 	payload = json.dumps(data).encode()
 
 	ip_header = b"\x45\x00\x00\x1d\x00\x00\x00\x00\x40\x11\x00\x00" + socket.inet_aton(Src) + socket.inet_aton(DST)
@@ -74,16 +73,13 @@ while True:
 	packet = ip_header + udp_header + payload
 
 	sock.sendto(packet, (DST, UDP_PORT))
+	sequence += 1
 
 	if current_time - checker > 1:
 		checker = current_time
 		print(f"Packet Sent: {sequence}", end="\r")
-	#print(f"Packet Sent: {sequence}", end="\r")
-
-	sequence += 1
 
 	sent_bytes += len(packet) + 14
 	elapsed_time = time.time() - start_time
 	expected_time = sent_bytes * 8 / MAX_BW
 	time.sleep(max(0, expected_time - elapsed_time))
-	
